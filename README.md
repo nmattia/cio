@@ -28,7 +28,6 @@ timeIt act = do
     start <- liftIO $ getCurrentTime
     res <- act
     stop <- liftIO $ getCurrentTime
-    liftIO $ print (diffUTCTime stop start)
     pure (diffUTCTime stop start, res)
 ```
 
@@ -47,7 +46,7 @@ timeIt $ getWith (param "dummy" .~ [uuid] $ defaults) "https://api.github.com/us
 ```
 
 
-    (1.087115629s,"Nicolas Mattia")
+    (1.370929802s,"Nicolas Mattia")
 
 
 
@@ -57,7 +56,7 @@ timeIt $ getWith (param "dummy" .~ [uuid] $ defaults) "https://api.github.com/us
 ```
 
 
-    (0.000193292s,"Nicolas Mattia")
+    (0.00025088s,"Nicolas Mattia")
 
 
 
@@ -70,7 +69,10 @@ import Data.Conduit.Combinators as C
 ```haskell
 sourceToList $ 
     getAllWith 
-        (param "q" .~ ["lang:haskell"] $ defaults)
+        (defaults 
+        & param "q" .~ ["language:haskell"] 
+        & param "sort" .~ ["stars"]
+        & param "per_page" .~ ["5"])
         "https://api.github.com/search/repositories"
     .| awaitForever (C.yieldMany . (
         ^..responseBody
@@ -78,25 +80,65 @@ sourceToList $
         .values
         .key "name"
         ._String))
-    .| C.take 5
+    .| C.take 15
 ```
 
 
-    "haskell-lang"
+    "pandoc"
 
 
 
-    "HaskellStudy"
+    "shellcheck"
 
 
 
-    "haskell-notes"
+    "postgrest"
 
 
 
-    "i-lang"
+    "purescript"
 
 
 
-    "impire-lang"
+    "compiler"
+
+
+
+    "Haxl"
+
+
+
+    "cardano-sl"
+
+
+
+    "stack"
+
+
+
+    "Idris-dev"
+
+
+
+    "luna"
+
+
+
+    "Functional-Programming"
+
+
+
+    "Carp"
+
+
+
+    "write-you-a-haskell"
+
+
+
+    "ghcjs"
+
+
+
+    "yesod"
 
