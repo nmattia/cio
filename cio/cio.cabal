@@ -1,0 +1,28 @@
+name:                cio
+version:             0.0.1
+license:             MIT
+author:              Nicolas Mattia
+maintainer:          nicolas@nmattia.com
+copyright:           (c) 2018 Nicolas Mattia
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:      CIO
+                        CIO.Types
+                        CIO.Wreq
+  hs-source-dirs:       src
+  build-depends:
+                        base
+                      , binary
+                      , bytestring
+                      , conduit
+                      , cryptohash
+                      , data-default
+                      , ihaskell
+                      , lens
+                      , leveldb-haskell
+                      , mtl
+                      , resourcet
+                      , unordered-containers
+                      , wreq
