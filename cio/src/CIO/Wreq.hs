@@ -26,18 +26,22 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Database.LevelDB as DB
 import qualified Network.Wreq as Wreq
 
+-- | A custom type for an HTTP response which we can serialize.
 data Response = Response
     { _responseLink :: Maybe String
-    , _responseBody :: BL.ByteString }
+    , _responseBody :: BL.ByteString
+    }
     deriving (Generic, Show)
 
 instance B.Binary Response
 
 makeLenses ''Response
 
+-- | An equivalent of 'Wreq.get' with cached responses.
 get :: String -> CIO Response
 get = getWith Wreq.defaults
 
+-- | An equivalent of 'Wreq.getWith' with cached responses.
 getWith :: Options -> String -> CIO Response
 getWith opts url = do
     db <- ask
@@ -46,27 +50,33 @@ getWith opts url = do
         Nothing -> do
             x <- liftIO $ Wreq.getWith opts url
             let resp = Response
-                    { _responseBody = (x^.Wreq.responseBody)
-                    , _responseLink = (x^?Wreq.responseLink "rel" "next".linkURL.unpackedChars)
+                    { _responseBody = x^.Wreq.responseBody
+                    , _responseLink = x
+                      ^? Wreq.responseLink "rel" "next"
+                      . linkURL
+                      . unpackedChars
                     }
             DB.put db def key (BL.toStrict $ B.encode resp)
             pure resp
   where
     key = hashRequest opts url
 
-hashRequest :: Options -> String -> BS.ByteString
-hashRequest opts url = SHA256.hash (BS8.pack $ show (opts, url))
-
+-- | Fetches responses lazily, using the cache when possible.
 getAllWith :: Options -> String -> Producer CIO Response
 getAllWith = fix $ \loop opts url -> do
     resp <- lift $ getWith opts url
     yield resp
     mapM_ (loop (opts&params.~[])) (_responseLink resp)
 
+-- | Dirties the request (deletes it from the cache).
 dirtyReq :: String -> CIO ()
 dirtyReq = dirtyReqWith Wreq.defaults
 
+-- | Dirties the request (deletes it from the cache).
 dirtyReqWith :: Options -> String -> CIO ()
 dirtyReqWith opts url =  do
     db <- ask
     DB.delete db def (hashRequest opts url)
+
+hashRequest :: Options -> String -> BS.ByteString
+hashRequest opts url = SHA256.hash (BS8.pack $ show (opts, url))

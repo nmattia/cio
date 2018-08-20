@@ -19,24 +19,40 @@ import qualified Database.LevelDB as DB
 newtype CIO a = CIO { unCIO :: ReaderT DB.DB (ResourceT IO) a }
     deriving newtype (Functor, Applicative, Monad, MonadReader DB.DB, MonadIO)
 
+-- | The default cache file (@requests.cache@) used if none was set explicitly
+-- with 'setCacheFile'.
 defaultCacheFile :: FilePath
 defaultCacheFile = "requests.cache"
 
+-- | The global filepath used for the cache, see 'setCacheFile' and
+-- 'getCacheFile' for setters accessors.
 cacheFile :: IORef FilePath
 cacheFile = unsafePerformIO (newIORef defaultCacheFile)
 {-# NOINLINE cacheFile #-}
 
+-- | Sets the global filepath used for the cache.
 setCacheFile :: FilePath -> IO ()
 setCacheFile = writeIORef cacheFile
 
+-- | Reads the global filepath used for the cache.
 getCacheFile :: IO FilePath
 getCacheFile = readIORef cacheFile
 
+-- | Runs a cached IO ('CIO') operation using the global cache file.
 runCIO :: CIO a -> IO a
-runCIO (CIO io) = runResourceT $ do
+runCIO cio = do
     cf <- liftIO $ getCacheFile
+    runCIOWith cf cio
+
+-- | Runs a cached IO ('CIO') operation using the provided cache file.
+runCIOWith :: FilePath -> CIO a -> IO a
+runCIOWith cf (CIO io) = runResourceT $ do
     db <- DB.open cf def {DB.createIfMissing = True}
     runReaderT io db
+
+-------------------------------------------------------------------------------
+-- Some instances for a smooth experience with IHaskell
+-------------------------------------------------------------------------------
 
 instance
       {-# OVERLAPPING #-}
