@@ -46,7 +46,7 @@ timeIt $ getWith (param "dummy" .~ [uuid] $ defaults) "https://api.github.com/us
 ```
 
 
-    (1.370929802s,"Nicolas Mattia")
+    (1.273326074s,"Nicolas Mattia")
 
 
 
@@ -56,7 +56,7 @@ timeIt $ getWith (param "dummy" .~ [uuid] $ defaults) "https://api.github.com/us
 ```
 
 
-    (0.00025088s,"Nicolas Mattia")
+    (0.000347555s,"Nicolas Mattia")
 
 
 
@@ -72,73 +72,33 @@ sourceToList $
         (defaults 
         & param "q" .~ ["language:haskell"] 
         & param "sort" .~ ["stars"]
-        & param "per_page" .~ ["5"])
+        & param "per_page" .~ ["2"])
         "https://api.github.com/search/repositories"
     .| awaitForever (C.yieldMany . (
         ^..responseBody
         .key "items"
         .values
-        .key "name"
+        .key "full_name"
         ._String))
-    .| C.take 15
+    .| C.take 5
 ```
 
 
-    "pandoc"
+    "jgm/pandoc"
 
 
 
-    "shellcheck"
+    "koalaman/shellcheck"
 
 
 
-    "postgrest"
+    "PostgREST/postgrest"
 
 
 
-    "purescript"
+    "purescript/purescript"
 
 
 
-    "compiler"
-
-
-
-    "Haxl"
-
-
-
-    "cardano-sl"
-
-
-
-    "stack"
-
-
-
-    "Idris-dev"
-
-
-
-    "luna"
-
-
-
-    "Functional-Programming"
-
-
-
-    "Carp"
-
-
-
-    "write-you-a-haskell"
-
-
-
-    "ghcjs"
-
-
-
-    "yesod"
+    "elm/compiler"
 
